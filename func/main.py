@@ -1,10 +1,12 @@
 # -*- coding: utf-8 -*-
 # To God be the Glory
 import os
-from func.dirs import FOLDERS, FROM_MAIN_FOLDER, TO_MAIN_FOLDER
+import threading
+from PyQt5.QtCore import QObject, pyqtSignal, pyqtSlot
+from func.dirs import FOLDERS, FROM_MAIN_FOLDER, TO_MAIN_FOLDER, TOTAL_BYTES
 
 
-class Installer():
+class Installer(QObject):
 
 
     """
@@ -17,10 +19,52 @@ class Installer():
 
 
     def __init__(self):
-        self.__init__
-        self._check_folders()
-        self._install()
-        self._install_winSxS()
+        QObject.__init__(self)
+        self.app_running = True
+        self.completed_size = 0
+
+    currentStatusChanged = pyqtSignal(str, arguments=["status"])
+    progressChanged = pyqtSignal(int, arguments=["progress"])
+    completed = pyqtSignal(str, arguments=["_install"])
+
+
+    @pyqtSlot()
+    def start(self):
+
+
+        """
+        """
+
+
+        print('we thank God')
+        start_thread = threading.Thread(target=self._install)
+        start_thread.daemon = True
+        start_thread.start()
+
+
+    def status(self, curr_status):
+
+
+        """
+           This updates the status on the side of the UI
+           It is called from the two installing functions with the status
+        """
+
+
+        self.currentStatusChanged.emit(curr_status)
+
+
+    def progress(self):
+
+
+        """
+        """
+        
+        percent = (self.completed_size / TOTAL_BYTES) * 100
+        print(percent)
+
+
+        self.progressChanged.emit(percent)
 
 
     def _check_folders(self):
@@ -40,7 +84,7 @@ class Installer():
         else:
             # throw exception,
             # cannot continue
-            print('Error _check_folders:', 'Some required folders are missing',
+            self.status('Error _check_folders: ' + 'Some required folders are missing ' +
                   'please download a Fresh copy')
 
 
@@ -79,28 +123,39 @@ class Installer():
                 # loop through each file
                 for item in content:
 
-                    # prevent the folders from being looped
-                    if item == 'en-US':
-                        # causes some small problem
-                        continue
+                    if self.app_running:
 
-                    else:
-                        # create each file
-                        print(item)
-                        with open(folder_from + "/" + item, 'rb') as br:
-                                data = br.read()
-                        ### if it exists skip.
-                        if not os.path.exists(folder_to + "/" + item):
-                            with open(folder_to + "/" + item, 'wb') as bf:
-                                bf.write(data)
+
+                        # prevent the folders from being looped
+                        if item == 'en-US':
+                            # causes some small problem
+                            continue
     
                         else:
-                            # skip
-                            # FIXME
-                            # the continue code
-                            print('Error _install:',
-                                  folder_to + '/' + item, 'already installed')
-                            continue
+                            # create each file
+                            print(item)
+                            with open(folder_from + "/" + item, 'rb') as br:
+                                    data = br.read()
+                            ### if it exists skip.
+                            if not os.path.exists(folder_to + "/" + item):
+    
+                                with open(folder_to + "/" + item, 'wb') as bf:
+                                    stat = "Currently installing file: " + folder_to + "/" + item
+                                    self.status(stat)
+                                    self.completed_size += len(data)
+                                    self.progress()
+                                    bf.write(data)
+        
+                            else:
+                                # skip
+                                # FIXME
+                                # the continue code
+                                self.status('Error _install: ' +
+                                      folder_to + '/' + item + ' already installed')
+                                continue
+
+        stat = 'Installation Complete'
+        self.completed.emit(stat)
 
 
     def _install_winSxS(self):
@@ -138,19 +193,28 @@ class Installer():
                 # loop through each file
                 for item in content:
 
-                    # create each file
-                    print(item)
-                    with open(folder_from + "/" + item, 'rb') as br:
-                            data = br.read()
-                    ### if it exists skip.
-                    if not os.path.exists(folder_to + "/" + item):
-                        with open(folder_to + "/" + item, 'wb') as bf:
-                            bf.write(data)
+                    if self.app_running:
 
-                    else:
-                        # skip
-                        # FIXME
-                        # the continue code
-                        print('Error _install:',
-                              folder_to + '/' + item, 'already installed')
-                        continue
+
+                        # create each file
+                        print(item)
+                        with open(folder_from + "/" + item, 'rb') as br:
+                                data = br.read()
+                        ### if it exists skip.
+                        if not os.path.exists(folder_to + "/" + item):
+    
+                            with open(folder_to + "/" + item, 'wb') as bf:
+    
+                                stat = "Currently installing file: " + folder_to + "/" + item
+                                self.status(stat)
+                                self.completed_size += len(data)
+                                self.progress()
+                                bf.write(data)
+    
+                        else:
+                            # skip
+                            # FIXME
+                            # the continue code
+                            self.status('Error _install: ' + 
+                                  folder_to + '/' + item + ' already installed')
+                            continue

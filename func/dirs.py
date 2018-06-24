@@ -5,3 +5,6 @@ FOLDERS = ['System32', 'System32/en-US', "SysWOW64", "SysWOW64/en-US", "WinSxS",
 FROM_MAIN_FOLDER = "C:/Users/Godwin/Desktop/DirectX"
 
 TO_MAIN_FOLDER = "C:/Users/Godwin/Desktop/Test"
+
+
+TOTAL_BYTES = 225357948
