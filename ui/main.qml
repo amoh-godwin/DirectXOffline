@@ -17,11 +17,61 @@ ApplicationWindow {
     property string installing_text: "Initialising"
 
     property string completed_text: "Finished"
+    property bool held: false
+    property int prevX: 0
+    property int prevY: 0
 
     header: Rectangle {
         width: parent.width
         height: 32
         color: "dodgerblue"
+
+        MouseArea {
+            anchors.fill: parent
+            hoverEnabled: true
+
+            onPressAndHold: {
+                held = true
+            }
+
+            onReleased: {
+                held = false
+            }
+
+            onMouseXChanged:  {
+                console.log(mouse.x)
+            }
+
+            onPositionChanged: {
+
+                if(held) {
+
+                    /*var curr_x = mouseX - prevX
+                    var curr_y = mouseY - prevY
+                    var r_curr_x = prevX - mouseX
+                    var r_curr_y = prevY - mouseY
+                    if(curr_x < 0) {
+                        window.x += r_curr_x
+                        window.y += r_curr_y
+                    } else {
+                        window.x += (curr_x)
+                        window.y += (curr_y)
+                    }
+
+
+                    console.log(curr_x, curr_y)
+                    //console.log(mouse.x, mouse.y)
+                    prevX = mouseX
+                    prevY = mouseY*/
+
+                    //window.x = mouseX
+                    //console.log(mouse.x)
+
+                }
+            }
+
+        }
+
     }
 
     StackView {
